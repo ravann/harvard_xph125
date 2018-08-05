@@ -1,0 +1,42 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This notebook details different aspects of importing data into R as explained in the "Data Science: Wrangling" course.
+
+
+Copy murders.csv to local directory
+```{r}
+library(dslabs)
+path <- system.file("extdata", package = "dslabs")
+fName <- "murders.csv"
+fPath <- file.path(path, fName)
+file.copy(fPath, getwd()) # this code can be commented, else it runs every time we run notebook
+```
+
+Read few lines of the murders.csv to determine the format
+
+```{r}
+library(readr)
+read_lines("murders.csv", n_max = 5)
+```
+
+Lets read the CSV file into a data frame
+
+```{r}
+murders1 <- read.csv("murders.csv")
+class(murders1)
+murders <- read_csv("murders.csv")
+class(murders)
+murders
+```
+
+Download the data from internet
+
+```{r}
+
+
+```
+
+
