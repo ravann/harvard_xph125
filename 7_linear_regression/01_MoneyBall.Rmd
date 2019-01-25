@@ -1,0 +1,90 @@
+---
+title: "Money Ball"
+output: html_notebook
+---
+
+## Load the data
+
+```{r}
+library(Lahman)
+```
+
+
+```{r}
+str(Teams)
+```
+
+```{r}
+head(Teams)
+```
+
+## Data Analysis
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(dslabs)
+```
+
+Lets analyze a few variables against Runs per game
+-> Home runs per game
+-> Stolen Bases per game
+-> Base on Balls per game
+
+Lets compute these variables
+
+```{r}
+Teams <- Teams %>% mutate(R_per_game = R/G, 
+                          HR_per_game = HR/G, 
+                          SB_per_game = SB/G, 
+                          BB_per_game = BB/G, 
+                          AB_per_game = AB/G
+                          )
+str(Teams)
+```
+
+```{r}
+?Teams
+```
+
+
+#### Plot: home runs per game vs. runs per game
+
+```{r}
+ds_theme_set()
+Teams %>% filter(yearID %in% 1961:2001) %>% ggplot(aes(HR_per_game, R_per_game)) + 
+  geom_point(alpha = 0.5) +
+#  geom_abline()
+  stat_smooth(method = "lm") # Adds a 
+```
+
+
+#### Plot: stolen bases per game vs. runs per game
+
+```{r}
+Teams %>% filter(yearID %in% 1961:2001) %>% ggplot(aes(SB_per_game, R_per_game)) + 
+  geom_point(alpha = 0.5) +
+#  geom_abline()
+  stat_smooth(method = "lm") # Adds a 
+```
+
+#### Plot: bases on ball per game vs. runs per game
+
+```{r}
+Teams %>% filter(yearID %in% 1961:2001) %>% ggplot(aes(BB_per_game, R_per_game)) + 
+  geom_point(alpha = 0.5) +
+#  geom_abline()
+  stat_smooth(method = "lm") # Adds a 
+```
+
+#### Plot: at-bats per game vs. runs per game
+
+```{r}
+Teams %>% filter(yearID %in% 1961:2001) %>% ggplot(aes(AB_per_game, R_per_game)) + 
+  geom_point(alpha = 0.5) +
+#  geom_abline()
+  stat_smooth(method = "lm") # Adds a 
+```
+
+

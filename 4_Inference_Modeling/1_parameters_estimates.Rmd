@@ -1,0 +1,13 @@
+---
+title: "1 - Parameters and Estimates"
+output: html_notebook
+---
+
+
+
+
+```{r}
+i <- 10
+i
+```
+

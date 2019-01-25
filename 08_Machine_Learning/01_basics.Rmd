@@ -1,0 +1,11 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Objective: 
+Explain the difference between the outcome and the features.
+Explain when to use classification and when to use prediction.
+Explain the importance of prevalence.
+Explain the difference between sensitivity and specificity.
+

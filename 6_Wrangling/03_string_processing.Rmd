@@ -1,0 +1,143 @@
+---
+title: "String Processing"
+output: html_notebook
+---
+
+This notebook is student work of String Processing module "Data Science: Wrangling" course.
+
+<H3> Quotes and escape characters </H3>
+
+When the string has single quote in it - we can use double quotes to define it
+
+```{r}
+s <- "He is 6' long "
+cat(s)
+```
+
+When the string has double quote in it - we can use double quotes to define it
+
+```{r}
+s <- 'The scale is 10" long '
+cat(s)
+```
+
+
+When the string has both quotes - we can need to use escape characters
+
+```{r}
+s <- 'He is 5\' 10" long '
+cat(s)
+```
+
+
+<H3> String Processing </H3>
+
+<B> Scape data from Web </B>
+
+Load libraries
+```{r}
+library(dplyr)
+library(rvest)
+```
+
+Download the web page
+
+```{r}
+url <- "https://en.wikipedia.org/wiki/Murder_in_the_United_States_by_state"
+h <- read_html(url)
+```
+
+Extract the tables from HTML code
+
+```{r}
+tab <- html_nodes(h, "table")
+tab <- tab[[2]]
+mdrs <- tab %>% html_table()
+head(mdrs)
+```
+
+Lets change the column names to proper names
+
+```{r}
+names(mdrs) = c("state", "population", "total_deaths", "murders", "gun_murders", "gun_ownership", "total_rate", "murder_rate", "gun_murder_rate")
+head(mdrs)
+```
+
+Check which columns has characters
+
+```{r}
+library(stringr)
+commas <- function(x) any(str_detect(x, ","))
+summarise_all(mdrs, commas)
+```
+
+We know population, total_death, murders, gun_murders has , in them.  Lets replace these and convert to numeric
+
+```{r}
+mdrs$population <- as.numeric(str_replace_all(mdrs$population, ",", ""))
+mdrs
+```
+
+OR use parse_number function to extract the number
+
+```{r}
+library(readr)
+mdrs_new <- mdrs %>% mutate_at(2:3, parse_number)
+mdrs_new
+```
+
+Now we need to clean up murders, gun_murders & murder_rate columns
+
+
+<B>Handle heights data</B>
+
+```{r}
+library(dslabs)
+data(reported_heights)
+head(reported_heights)
+```
+
+Lets try to convert the height to numeric
+
+```{r}
+as.numeric(reported_heights$height)
+```
+
+We see a number of NA's, lets understand where these NAs are coming from
+
+```{r}
+rh <- reported_heights %>% mutate(new_height = as.numeric(height))
+rh %>% filter(is.na(new_height)) %>% head(10)
+```
+
+There are many patterns above.  We will use regex to identify certain patterns and work on extracting the digital values from the input.
+
+Lets build some examples and test out the pattern
+
+
+```{r}
+pve <- c("5'7\"", "4'9\"", "7' 6\"" )
+nve <- c("5.7\"", "4,9\"", "3'6\"", "64" )
+pattern <- "^[4-7]['][\\s]*[\\d]{1,2}[\"]*"
+pattern
+```
+
++ve test cases
+```{r}
+pve
+```
+
+Result
+```{r}
+str_detect(pve, pattern)
+```
+
+-ve test cases
+```{r}
+nve
+```
+
+Result
+```{r}
+str_detect(nve, pattern)
+```

@@ -1,0 +1,262 @@
+---
+title: "Tidy Data"
+output: html_notebook
+---
+
+This notebook is student work of Tidy Data chapter as explained in the "Data Science: Wrangling" course.
+
+
+Load gapminder module
+
+```{r}
+library(gapminder)
+library(dplyr)
+data(gapminder)
+
+```
+
+Read gapminder data and filter it
+
+```{r}
+head(gapminder)
+```
+
+```{r}
+tidy_data <- gapminder %>% filter(country %in% c("South Korea", "Germany", "India", "Singapore") ) %>% select(country, year, lifeExp)
+```
+
+Plot the data
+
+```{r}
+library(ggplot2)
+tidy_data %>% ggplot(aes(year, lifeExp, col = country)) + geom_point()
+```
+
+<H3> Gather - Transpose wide data into column formmat </H3>
+
+Lets get the wide formatted data from dslabs
+
+```{r}
+library(readr)
+path <- system.file("extdata", package = "dslabs")
+filename <- file.path(path, "fertility-two-countries-example.csv")
+wide_data <- read_csv(filename)
+head(wide_data)
+```
+
+
+
+Reshape the data
+
+```{r}
+library(tidyverse)
+new_tidy_data <- wide_data %>% gather(year, fertility, '1960':'2015')
+# Can also be rewritten as 
+new_tidy_data <- wide_data %>% gather(year, fertility, -country)
+head(new_tidy_data)
+```
+
+Convert the type to integer
+
+```{r}
+new_tidy_data <- wide_data %>% gather(year, fertility, -country, convert = TRUE)
+head(new_tidy_data)
+```
+
+<H3> Spread - Transpose tidy data into wide data </H3>
+
+New spread the fertility data by country
+
+```{r}
+new_wide_data <- new_tidy_data %>% spread (country, fertility)
+head(new_wide_data)
+```
+
+<H3> Separate and unite the data</H3>
+
+Read the data
+
+
+```{r}
+path <- system.file("extdata", package = "dslabs")
+filename <- file.path(path, "life-expectancy-and-fertility-two-countries-example.csv")
+raw_data <- read_csv(filename)
+head(raw_data)
+```
+
+The problem is there are two variables life_expectancy and fertility appended to year.
+
+So we will run: 
+1) Create a column VAR with values ( 1960_fertility, 1960_life_expectancy .... )
+2) Split the column into 2 columns, one having year and other the variable name ( life expectancy or fertility)
+3) Use the spread function to create 2 columns life_expectancy & fertility
+
+Step 1: 
+```{r}
+s1_data <- raw_data %>% gather(var, val, -country)
+head(s1_data)
+```
+
+Step 2: 
+```{r}
+s2_data <- s1_data %>% separate(var, c("year", "variable_name"), sep = "_", extra = "merge" )
+head(s2_data)
+```
+
+Step3: 
+```{r}
+s3_data <- s2_data %>% spread( variable_name, val )
+head(s3_data)
+```
+
+<H3> Combining Tables </H3>
+
+Review the datasets used for exercise
+
+```{r}
+library(dslabs)
+head(murders)
+```
+
+
+```{r}
+head(results_us_election_2016)
+```
+
+
+Join murders and results_us_election_2016 datasets 
+
+
+```{r}
+joined_ds <- left_join(murders, results_us_election_2016, by = "state") %>% select(state, abb, region, population, electoral_votes)
+head(joined_ds)
+```
+
+Take subset of data from these 2 tables to run various joins
+
+```{r}
+tab1 <- slice(murders, 1:6) %>% select(state, population)
+tab2 <- slice(results_us_election_2016, c(1:3, 5, 7:8) ) %>% select(state, electoral_votes)
+```
+
+<b>Inner join</b> - joins two datasets by the key and only returns matching datasets
+
+```{r}
+inner_join(tab1, tab2, by = "state")
+```
+
+Another suported syntax
+
+```{r}
+tab1 %>% inner_join(tab2, by = "state")
+```
+
+
+<b>Left join</b> - results in taking everything from left dataset ( tab1 ) and matching data from tab2
+
+```{r}
+left_join(tab1, tab2, by = "state")
+```
+
+Another suported syntax
+
+```{r}
+tab1 %>% left_join(tab2, by = "state")
+```
+
+
+<b>Right join</b> - results in taking in everything from right dataset ( tab2 ) and matching data from tab1
+
+```{r}
+right_join(tab1, tab2, by = "state")
+```
+
+Another suported syntax
+
+```{r}
+tab1 %>% right_join(tab2, by = "state")
+```
+
+
+<b>Full join</b> - results in taking in everything from left dataset ( tab1 ) right dataset ( tab2 )
+
+```{r}
+full_join(tab1, tab2, by = "state")
+```
+
+Another suported syntax
+
+```{r}
+tab1 %>% full_join(tab2, by = "state")
+```
+
+
+<b>Semi join</b> - keeps the records in left dataset ( tab1 ) if there are matching records in right dataset ( tab2 )
+Semi Join will not bring any columns from right dataset ( tab 2 )
+
+```{r}
+semi_join(tab1, tab2, by = "state")
+```
+
+Another suported syntax
+
+```{r}
+tab1 %>% semi_join(tab2, by = "state")
+```
+
+<b>Anti join</b> - is opposite of Semi join - it removes records in left dataset ( tab1 ) if there are matching records in right dataset ( tab2 ).  Like semi Join, Anti Join will not bring any columns from right dataset ( tab 2 )
+
+```{r}
+anti_join(tab1, tab2, by = "state")
+```
+
+Another suported syntax
+
+```{r}
+tab1 %>% anti_join(tab2, by = "state")
+```
+
+
+<H3> Web Scraping </H3>
+
+rvest package helps scape the web
+```{r}
+library(rvest)
+```
+
+Read the data from Wikipedia
+```{r}
+url <- "https://en.wikipedia.org/wiki/Murder_in_the_United_States_by_state"
+h <- read_html(url)
+h
+```
+
+Extract the tables from HTML code
+
+```{r}
+tabs <- html_nodes(h, "table")
+tabs
+```
+
+Table the 2nd table and get the html table out of it
+
+```{r}
+tab <- tabs[[2]]
+mdrs <- tab %>% html_table()
+head(mdrs)
+```
+
+Lets look at the structure of the table mdrs
+
+```{r}
+str(mdrs)
+```
+
+
+Lets change the column names to proper names
+
+```{r}
+names(mdrs) = c("state", "population", "total_deaths", "murders", "gun_murders", "gun_ownership", "total_rate", "murder_rate", "gun_murder_rate")
+str(mdrs)
+```
+
