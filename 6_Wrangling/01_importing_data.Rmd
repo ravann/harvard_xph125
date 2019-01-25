@@ -32,11 +32,16 @@ class(murders)
 murders
 ```
 
-Download the data from internet
+Load the data from internet
 
 ```{r}
-
+murders_i <- read_csv('https://raw.githubusercontent.com/ravann/harvard_xph125/master/6_Wrangling/murders.csv')
 
 ```
 
+
+```{r}
+class(murders_i)
+
+```
 
