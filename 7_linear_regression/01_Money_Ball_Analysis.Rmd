@@ -1,0 +1,285 @@
+---
+title: "Linear Models"
+output: html_notebook
+---
+
+## Introduction
+
+Money ball data is used through out the lecture series.
+
+## Load Data Analysis Libraries
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(dslabs)
+```
+
+## Load the data
+
+```{r}
+library(Lahman)
+```
+
+
+```{r}
+str(Teams)
+```
+
+```{r}
+head(Teams)
+```
+
+## Create variables to analyze the dataset
+
+Lets analyze a few variables against Runs per game
+-> Home runs per game
+-> Stolen Bases per game
+-> Base on Balls per game
+
+Lets compute these variables
+
+```{r}
+T2002 <- Teams %>% filter(yearID %in% 2002) %>% 
+                      mutate (
+                          singles = H - HR - X2B - X3B, 
+                          R_per_game = R/G, 
+                          HR_per_game = HR/G, 
+                          SB_per_game = SB/G, 
+                          BB_per_game = BB/G, 
+                          AB_per_game = AB/G, 
+                          singles_per_game = singles / G, 
+                          doubles_per_game = X2B / G, 
+                          triples_per_game = X3B / G
+                          )
+
+Teams <- Teams %>% filter(yearID %in% 1961:2001) %>% 
+                      mutate (
+                          singles = H - HR - X2B - X3B, 
+                          R_per_game = R/G, 
+                          HR_per_game = HR/G, 
+                          SB_per_game = SB/G, 
+                          BB_per_game = BB/G, 
+                          AB_per_game = AB/G, 
+                          singles_per_game = singles / G, 
+                          doubles_per_game = X2B / G, 
+                          triples_per_game = X3B / G
+                          )
+str(Teams)
+```
+
+```{r}
+Teams
+```
+
+## Polt the variables created
+
+### Plot: home runs per game vs. runs per game
+
+```{r}
+ds_theme_set()
+Teams %>% ggplot(aes(HR_per_game, R_per_game)) + 
+  geom_point(alpha = 0.5) +
+#  geom_abline()
+  stat_smooth(method = "lm") # Adds a 
+```
+
+
+### Plot: stolen bases per game vs. runs per game
+
+```{r}
+Teams %>% ggplot(aes(SB_per_game, R_per_game)) + 
+  geom_point(alpha = 0.5) +
+#  geom_abline()
+  stat_smooth(method = "lm") # Adds a 
+```
+
+### Plot: bases on ball per game vs. runs per game
+
+```{r}
+Teams %>% ggplot(aes(BB_per_game, R_per_game)) + 
+  geom_point(alpha = 0.5) +
+#  geom_abline()
+  stat_smooth(method = "lm") # Adds a 
+```
+
+### Plot: at-bats per game vs. runs per game
+
+```{r}
+Teams %>% ggplot(aes(AB_per_game, R_per_game)) + 
+  geom_point(alpha = 0.5) +
+#  geom_abline()
+  stat_smooth(method = "lm") # Adds a 
+```
+
+## Confuounding
+
+### Higher BB => Higher Runs Per Game.
+However, this is not true if we understand the BaseBall game bette.  Homeruns usually results in BB and this is why BB is higher.
+
+
+Lets check the correlation between BB & Home runs.  Also compare Singles with Home runs.
+
+```{r}
+
+Teams %>% summarize(
+                                                      cor(HR_per_game, BB_per_game), 
+                                                      cor(HR_per_game, singles_per_game), 
+                                                      cor(BB_per_game, singles_per_game)
+                                                    )
+
+```
+
+Bases on Balls are confounded with Home Runs
+
+
+
+## lm function
+
+
+```{r}
+
+fit <- lm(R_per_game ~ HR_per_game + BB_per_game, Teams)
+fit
+```
+
+```{r}
+summary(Teams)
+```
+
+## Tibbles
+
+Tibbles display much better
+
+### Differences with Dataframe
+
+### Dataframe display
+
+```{r}
+Teams
+```
+
+### Tibbles display
+
+```{r}
+library(tidyverse)
+library(tidyquant)
+
+t <- as_tibble(Teams)
+t
+```
+
+### DO Function
+
+Create a regression line for each strata
+
+```{r}
+
+dat <- Teams %>% filter(yearID %in% 1961:2001) %>% 
+  mutate(HR = round(HR/G, 1), 
+         BB = BB / G, 
+         R = R / G) %>% 
+  select(HR, BB, R) %>% 
+  filter(HR >= 0.4 & HR <= 1.2)
+
+dat %>% group_by(HR) %>% do(fit = lm(R ~ BB, data = . ) )
+
+```
+
+Create a function that returns a dataframe instread of a function
+
+```{r}
+
+get_slope <- function(data) {
+  fit <- lm(R ~ BB, data = data)
+  sum.fit <- summary(fit)
+
+  data.frame(slope = sum.fit$coefficients[2, "Estimate"], 
+             se = sum.fit$coefficients[2, "Std. Error"],
+             pvalue = sum.fit$coefficients[2, "Pr(>|t|)"])
+}
+
+dat %>% group_by(HR) %>% do(get_slope(.))
+
+```
+
+To know whether the relationship between home runs and runs per game varies by baseball league.
+
+```{r}
+library(broom)
+dat <- Teams %>% select(lgID, HR_per_game, BB_per_game, R_per_game) 
+
+dat %>% 
+  group_by(lgID) %>% 
+  do(glance(lm(R_per_game ~ HR_per_game, data = .)))
+
+```
+
+## Building a Better Offensive Metric for Baseball
+
+```{r}
+fit <- Teams %>% lm(R_per_game ~ HR_per_game + BB_per_game, data = .)
+
+tidy(fit)
+
+```
+
+```{r}
+tidy(fit, conf.int = TRUE)
+```
+
+```{r}
+fit <- Teams %>% lm(R_per_game ~ BB_per_game + singles_per_game + doubles_per_game + triples_per_game + HR_per_game, data = .)
+tidy(fit, conf.int = TRUE)
+```
+
+Lets predit for 2002 based on the above model
+
+```{r}
+t <- T2002 %>% mutate(R_pred = predict(fit, newdata = .))
+```
+
+```{r}
+t %>% ggplot(aes(R_pred, R_per_game)) + 
+  geom_point() + 
+  geom_text(aes(label = teamID), nudge_x = 0.06) + 
+#  stat_smooth(method = "lm") + 
+  geom_abline(slope = 1, intercept = 0)
+```
+
+## Modelling individual player
+
+Lets look at batting dataset
+
+```{r}
+help(Batting)
+```
+
+```{r}
+pa_per_game <- Batting %>% filter(yearID == 2012) %>% 
+  group_by(teamID) %>% 
+  summarise(pa_per_game = sum(AB + BB) / max(G)) %>% 
+  .$pa_per_game %>% mean
+
+pa_per_game
+```
+
+### Predict
+
+Imagine you have two teams. 
+Team A is comprised of batters who, on average, get two bases on balls, four singles, one double, and one home run. 
+Team B is comprised of batters who, on average, get one base on balls, six singles, two doubles, and one triple.
+
+
+#### Create a data frame for this data
+```{r}
+
+data.frame(teamId = c("A", "B"), BB_per_game = c(2, 1), singles_per_game = c(4, 6), doubles_per_game = c(1, 2), triples_per_game = c(0, 1), HR_per_game = c(1, 0))
+
+```
+
+#### Predit the data
+
+
+
