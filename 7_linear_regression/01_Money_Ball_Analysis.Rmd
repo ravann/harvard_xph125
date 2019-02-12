@@ -275,11 +275,22 @@ Team B is comprised of batters who, on average, get one base on balls, six singl
 #### Create a data frame for this data
 ```{r}
 
-data.frame(teamId = c("A", "B"), BB_per_game = c(2, 1), singles_per_game = c(4, 6), doubles_per_game = c(1, 2), triples_per_game = c(0, 1), HR_per_game = c(1, 0))
+nd <- data.frame(teamId = c("A", "B"), BB_per_game = c(2, 1), singles_per_game = c(4, 6), doubles_per_game = c(1, 2), triples_per_game = c(0, 1), HR_per_game = c(1, 0))
+
+nd
 
 ```
 
 #### Predit the data
 
+```{r}
+predict(fit, newdata = nd)
+```
 
+To be sure what data corresponds to which column, we can mutate the column into dataframe.
+
+```{r}
+nd <- nd %>% mutate(R_pred = predict(fit, newdata = .))
+nd
+```
 
